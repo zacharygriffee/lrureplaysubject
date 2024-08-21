@@ -142,14 +142,14 @@ test('max age - a non-recent item can also expire', async t => {
 test('max age - setting the item again should refresh the expiration time', async t => {
     const lruSubject = new LRUReplaySubject({maxSize: 2, maxAge: 100});
     lruSubject.next('test');
-    await delay(50);
-    lruSubject.next('test2');
+    await delay(75);
+    lruSubject.next('test');
     await delay(50);
 
     let value;
     lruSubject.subscribe(v => value = v);
 
-    t.alike(value, 'test2');
+    t.alike(value, 'test');
 });
 
 test('max age - setting an item with a local expiration date', async t => {

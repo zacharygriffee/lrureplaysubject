@@ -63,7 +63,7 @@ Creates a shared observable that replays values from an LRU cache.
 ### Example Usage
 
 ```javascript
-import { shareLRUReplay } from './index.js';
+import { shareLRUReplay } from 'lrureplaysubject';
 
 const shared$ = someObservable$.pipe(shareLRUReplay({ maxSize: 2 }));
 

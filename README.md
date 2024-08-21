@@ -14,10 +14,10 @@ Uses [quick-lru](https://github.com/sindresorhus/quick-lru) under the hood.
 
 ## Installation
 
-Install the necessary dependencies via npm:
+Install via npm:
 
 ```bash
-npm install rxjs quick-lru delegates
+npm install lrureplaysubject
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ npm install rxjs quick-lru delegates
 Here's a basic example of how to use the `LRUReplaySubject` and `shareLRUReplay` operator:
 
 ```javascript
-import { LRUReplaySubject, shareLRUReplay } from './index.js';
+import { LRUReplaySubject, shareLRUReplay } from 'lrureplaysubject';
 
 // Example with LRUReplaySubject
 const subject = new LRUReplaySubject({ maxSize: 3 });

@@ -1,6 +1,6 @@
 {
   "name": "lrureplaysubject",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Two way RPC between a web worker and the main thread using transferable objects and streams.",
   "type": "module",
   "browser": "dist/index.min.js",

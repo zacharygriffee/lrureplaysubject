@@ -1,0 +1,27 @@
+{
+  "name": "lrureplaysubject",
+  "version": "0.1.0",
+  "description": "Two way RPC between a web worker and the main thread using transferable objects and streams.",
+  "type": "module",
+  "browser": "dist/index.min.js",
+  "homepage": "https://github.com/zacharygriffee/lrureplaysubject#readme",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "brittle ./test.js",
+    "bundle": "node ./bundle.js"
+  },
+  "private": true,
+  "dependencies": {
+    "delegates": "^1.0.0",
+    "quick-lru": "^7.0.0",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "bring-your-own-storage-utilities": "^0.0.1332",
+    "brittle": "^3.6.1",
+    "localdrive": "^1.11.4"
+  }
+}

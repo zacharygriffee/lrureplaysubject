@@ -1,7 +1,7 @@
 {
   "name": "lrureplaysubject",
-  "version": "0.1.2",
-  "description": "Two way RPC between a web worker and the main thread using transferable objects and streams.",
+  "version": "0.1.3",
+  "description": "\nLRUReplaySubject is an RxJS utility that combines an LRU cache with a replay subject, efficiently managing memory by evicting old items while replaying recent events to new subscribers.",
   "type": "module",
   "browser": "dist/index.min.js",
   "homepage": "https://github.com/zacharygriffee/lrureplaysubject#readme",

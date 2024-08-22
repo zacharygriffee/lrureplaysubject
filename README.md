@@ -8,10 +8,10 @@
 
 ## Features
 
-- LRU cache implementation using **QuickLRU**
-- Emits cached values to new subscribers
-- Configurable cache size and age limits (`maxSize` and `maxAge`)
-- Custom eviction notifications using `onEviction`
+- **LRU Cache Implementation**: Efficiently caches and manages data using `QuickLRU`.
+- **Replay Cached Values**: Emits cached values to new subscribers.
+- **Configurable Cache**: Supports `maxSize` and `maxAge` limits for the cache.
+- **Eviction Notifications**: Notifies about evicted items via `onEviction`.
 
 ## Installation
 
@@ -43,9 +43,9 @@ const lruReplaySubject = new LRUReplaySubject({
     onEviction: new Subject() // Subject to handle evictions
 });
 
-// Subscribe to eviction notifications (Optional)
-lruReplaySubject.subscribe((evt) => {
-    console.log('Evicted:', evt);
+// Log eviction notifications (Optional)
+lruReplaySubject.onEviction.subscribe((value) => {
+    console.log('Evicted:', value);
 });
 
 // Share the observable using LRUReplaySubject
@@ -71,13 +71,13 @@ setTimeout(() => {
         complete: () => console.log('[Subscriber 2] Completed')
     });
 
-    // Clean up new subscriber
+    // Clean up the new subscriber
     setTimeout(() => {
         subscription2.unsubscribe();
     }, 7000); // Unsubscribe after 7 seconds
 }, 5000); // New subscriber joins after 5 seconds
 
-// Clean up original subscriber
+// Clean up the original subscriber
 setTimeout(() => {
     subscription1.unsubscribe();
 }, 15000); // Unsubscribe after 15 seconds
@@ -100,7 +100,13 @@ const lruSubject = new LRUReplaySubject({ maxSize: 1, onEviction: onEvictionSubj
 lruSubject.next(1); // Adds item 1
 lruSubject.next(2); // Item 1 is evicted, item 2 is added
 
+// Subscribe to the subject to receive cached values
+lruSubject.subscribe(value => {
+    console.log('Received:', value);
+});
+
 // Output: "Evicted: 1"
+// Output: "Received: 2" (Only item 2 is in the cache)
 ```
 
 #### 2. Eviction on Exceeding `maxAge`
@@ -123,12 +129,13 @@ lruSubject.next('test');
     lruSubject.subscribe(value => console.log('Received:', value)); // Receives no items since 'test' is expired and evicted
 
     // Output: "Evicted: test"
+    // Output: "Received: " (There are no items to receive)
 })();
 ```
 
 ### Conclusion
 
-The `LRUReplaySubject` provides a robust mechanism for managing real-time data streams with constraints on memory and time. The provided test cases ensure its reliable behavior across various scenarios.
+The `LRUReplaySubject` provides a robust mechanism for managing real-time data streams with constraints on memory and time. The provided test cases ensure its reliable behavior across various scenarios, showing a combination of LRU caching with replay capabilities, including handling eviction notifications separately from cached content.
 
 ## License
 

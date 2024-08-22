@@ -22,14 +22,14 @@ export class LRUReplaySubject extends Subject {
 
         delegates(this, "_cache")
             .method("resize")
-            .method("peek")
             .method("delete")
             .method("clear")
             .method("entries")
             .method("values")
-            .method("keys")
             .method("entriesAscending")
             .method("entriesDescending");
+
+        this.onEviction = onEviction;
     }
 
     next(value) {

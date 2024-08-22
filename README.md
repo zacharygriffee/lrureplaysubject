@@ -1,134 +1,70 @@
-# LRU Replay Subject
+# LRUReplaySubject
 
-[![npm version](https://badge.fury.io/js/lru-replay-subject.svg)](https://badge.fury.io/js/lru-replay-subject)
+A custom implementation of an RxJS `Subject` that combines the functionality of a Least Recently Used (LRU) cache with replay capabilities. This utility allows you to cache and replay values to new subscribers, making it particularly useful for scenarios where you want to limit memory usage while still providing a replay of recent events.
 
-## Overview
-
-`LRUReplaySubject` is a specialized implementation of RxJS `Subject` that combines the functionalities of least-recently-used (LRU) caching with replaying capabilities. This ensures efficient memory usage by retaining frequently accessed items and re-emitting them to new subscribers in descending order of recent usage.
+Uses [quick-lru](https://github.com/sindresorhus/quick-lru) under the hood.
 
 ## Features
 
-- LRU cache implementation using **QuickLRU**
-- Emits cached values to new subscribers
-- Configurable cache size and age limits (`maxSize` and `maxAge`)
-- Custom eviction notifications using `onEviction`
+- **LRU Caching:** Automatically evicts least recently used items when the cache reaches its maximum size.
+- **Replay Subject:** Replays cached values to new subscribers.
+- **Configurable:** Supports various configuration options like `maxSize`, `maxAge`, and `onEviction` callbacks.
+- **Delegated Methods:** Includes methods like `resize`, `peek`, `delete`, `clear`, and more to interact with the cache.
+- **22kb** Minified size
 
 ## Installation
 
-```sh
-npm install rxjs quick-lru delegates
+Install via npm:
+
+```bash
+npm install lrureplaysubject
 ```
 
 ## Usage
 
-### Real-World Example: Stock Price Feed
-
-Let's consider a real-world scenario where you have a real-time stock price feed, and you want to cache and replay the most recent prices to new subscribers.
+Here's a basic example of how to use the `LRUReplaySubject` and `shareLRUReplay` operator:
 
 ```javascript
-import { LRUReplaySubject, shareLRUReplay } from './path-to-lru-replay-subject';
-import { interval, Subject } from 'rxjs';
-import { map, take } from 'rxjs/operators';
+import { LRUReplaySubject, shareLRUReplay } from 'lrureplaysubject';
 
-// Simulate a real-time stock price feed
-const stockPriceFeed = interval(1000).pipe(
-    take(10), // Simulate 10 stock price updates
-    map(i => ({ symbol: 'AAPL', price: (150 + i).toFixed(2) })) // Generate example stock price data
-);
+// Example with LRUReplaySubject
+const subject = new LRUReplaySubject({ maxSize: 3 });
 
-// Create an LRUReplaySubject with custom configuration
-const lruReplaySubject = new LRUReplaySubject({
-    maxSize: 5, // Keep the last 5 prices
-    maxAge: 1000 * 60, // 1 minute
-    onEviction: new Subject() // Subject to handle evictions
-});
+subject.subscribe(value => console.log('Subscriber 1:', value));
+subject.next(1);
+subject.next(2);
+subject.next(3);
+subject.next(4); // The value 1 should be evicted
 
-// Subscribe to eviction notifications (Optional)
-lruReplaySubject.subscribe((evt) => {
-    console.log('Evicted:', evt);
-});
+subject.subscribe(value => console.log('Subscriber 2:', value)); // Replays [4, 3, 2]
 
-// Share the observable using LRUReplaySubject
-const sharedObservable = stockPriceFeed.pipe(
-    shareLRUReplay({
-        maxSize: 5,
-        maxAge: 1000 * 60 // 1 minute
-    })
-);
+// Example with shareLRUReplay operator
+const shared$ = someObservable$.pipe(shareLRUReplay({ maxSize: 2 }));
 
-// Subscribe to the shared observable to receive real-time updates
-const subscription1 = sharedObservable.subscribe({
-    next: value => console.log('[Subscriber 1] Received:', value),
-    error: err => console.error('[Subscriber 1] Error:', err),
-    complete: () => console.log('[Subscriber 1] Completed')
-});
-
-// Simulate a new subscriber joining after some initial values are emitted
-setTimeout(() => {
-    const subscription2 = sharedObservable.subscribe({
-        next: value => console.log('[Subscriber 2] Received:', value),
-        error: err => console.error('[Subscriber 2] Error:', err),
-        complete: () => console.log('[Subscriber 2] Completed')
-    });
-
-    // Clean up new subscriber
-    setTimeout(() => {
-        subscription2.unsubscribe();
-    }, 7000); // Unsubscribe after 7 seconds
-}, 5000); // New subscriber joins after 5 seconds
-
-// Clean up original subscriber
-setTimeout(() => {
-    subscription1.unsubscribe();
-}, 15000); // Unsubscribe after 15 seconds
+shared$.subscribe(value => console.log('Shared Subscriber:', value)); // Replays last 2 emitted values from someObservable$
 ```
 
-### Additional Examples from Test Cases
+## Configuration Options
 
-#### 1. Eviction on Exceeding `maxSize`
+- **maxSize:** Maximum number of items the cache can hold.
+- **maxAge:** Maximum age for items before they are considered stale and eligible for eviction.
+- **onEviction:** A `Subject` that will receive evicted items from the cache.
 
-```javascript
-import { LRUReplaySubject } from './path-to-lru-replay-subject';
-import { Subject } from 'rxjs';
+## Methods
 
-const onEvictionSubject = new Subject();
-onEvictionSubject.subscribe(value => {
-    console.log('Evicted:', value);
-});
+The `LRUReplaySubject` class provides several methods to manage the cache:
 
-const lruSubject = new LRUReplaySubject({ maxSize: 1, onEviction: onEvictionSubject });
-lruSubject.next(1); // Adds item 1
-lruSubject.next(2); // Item 1 is evicted, item 2 is added
+- `resize(newSize)`: Resize the cache.
+- `peek(key)`: Peek at the value associated with the key without affecting its recency.
+- `delete(key)`: Delete a key-value pair from the cache.
+- `clear()`: Clear the entire cache.
+- `entries()`: Get an iterator for the cache entries in ascending order of usage.
+- `values()`: Get an iterator for the cache values in ascending order of usage.
+- `keys()`: Get an iterator for the cache keys in ascending order of usage.
+- `entriesAscending()`: Get an iterator for the cache entries in ascending order.
+- `entriesDescending()`: Get an iterator for the cache entries in descending order.
 
-// Output: "Evicted: 1"
-```
-
-#### 2. Eviction on Exceeding `maxAge`
-
-```javascript
-import { LRUReplaySubject } from './path-to-lru-replay-subject';
-import { Subject } from 'rxjs';
-
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-const onEvictionSubject = new Subject();
-onEvictionSubject.subscribe(value => {
-    console.log('Evicted:', value);
-});
-
-const lruSubject = new LRUReplaySubject({ maxSize: 1, maxAge: 100, onEviction: onEvictionSubject });
-lruSubject.next('test');
-
-(async () => {
-    await delay(200); // Wait for 200ms
-    lruSubject.subscribe(value => console.log('Received:', value)); // Receives no items since 'test' is expired and evicted
-
-    // Output: "Evicted: test"
-})();
-```
-
-### Conclusion
-
-The `LRUReplaySubject` provides a robust mechanism for managing real-time data streams with constraints on memory and time. The provided test cases ensure its reliable behavior across various scenarios.
+## [API](./API.md)
 
 ## License
 

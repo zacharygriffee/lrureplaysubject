@@ -1,7 +1,5 @@
 # LRU Replay Subject
 
-[![npm version](https://badge.fury.io/js/lru-replay-subject.svg)](https://badge.fury.io/js/lru-replay-subject)
-
 ## Overview
 
 `LRUReplaySubject` is a specialized implementation of RxJS `Subject` that combines the functionalities of least-recently-used (LRU) caching with replaying capabilities. This ensures efficient memory usage by retaining frequently accessed items and re-emitting them to new subscribers in descending order of recent usage.
@@ -16,7 +14,7 @@
 ## Installation
 
 ```sh
-npm install rxjs quick-lru delegates
+npm install lrureplaysubject
 ```
 
 ## Usage
@@ -26,7 +24,7 @@ npm install rxjs quick-lru delegates
 Let's consider a real-world scenario where you have a real-time stock price feed, and you want to cache and replay the most recent prices to new subscribers.
 
 ```javascript
-import { LRUReplaySubject, shareLRUReplay } from './path-to-lru-replay-subject';
+import { LRUReplaySubject, shareLRUReplay } from 'lrureplaysubject';
 import { interval, Subject } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -88,7 +86,7 @@ setTimeout(() => {
 #### 1. Eviction on Exceeding `maxSize`
 
 ```javascript
-import { LRUReplaySubject } from './path-to-lru-replay-subject';
+import { LRUReplaySubject } from 'lrureplaysubject';
 import { Subject } from 'rxjs';
 
 const onEvictionSubject = new Subject();
@@ -112,7 +110,7 @@ lruSubject.subscribe(value => {
 #### 2. Eviction on Exceeding `maxAge`
 
 ```javascript
-import { LRUReplaySubject } from './path-to-lru-replay-subject';
+import { LRUReplaySubject } from 'lrureplaysubject';
 import { Subject } from 'rxjs';
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));

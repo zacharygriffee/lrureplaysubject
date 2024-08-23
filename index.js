@@ -21,6 +21,7 @@ export class LRUReplaySubject extends Subject {
         });
 
         delegates(this, "_cache")
+            .getter("size")
             .method("resize")
             .method("delete")
             .method("clear")

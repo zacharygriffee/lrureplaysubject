@@ -1,6 +1,6 @@
 {
   "name": "lrureplaysubject",
-  "version": "0.1.61",
+  "version": "0.1.62",
   "description": "\nLRUReplaySubject is an RxJS utility that combines an LRU cache with a replay subject, efficiently managing memory by evicting old items while replaying recent events to new subscribers.",
   "type": "module",
   "browser": "dist/index.min.js",

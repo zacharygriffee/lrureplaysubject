@@ -702,3 +702,58 @@ test('shareLRUReplay - handles eviction and maxAge together correctly', async t 
     source$.subscribe(value => receivedValues2.push(value));
     t.alike(receivedValues2, ['D', 'C', 'B']); // A expired and is no longer replayed
 });
+
+test('`key` config option extracts value using the specified key', async t => {
+    const onEviction = new Subject();
+    const lruSubject = new LRUReplaySubject({maxSize: 10, key: 'id', onEviction});
+
+    lruSubject.next({id: '1', value: 'test1'});
+    lruSubject.next({id: '2', value: 'test2'});
+
+    let values = [];
+    lruSubject.subscribe(value => values.push(value.id));
+
+    t.alike(values, ['2', '1']);
+});
+
+test('`map` config option extracts value using the provided map function', async t => {
+    const onEviction = new Subject();
+    const mapFunc = obj => obj.customKey;
+    const lruSubject = new LRUReplaySubject({maxSize: 10, map: mapFunc, onEviction});
+
+    lruSubject.next({customKey: '1', value: 'test1'});
+    lruSubject.next({customKey: '2', value: 'test2'});
+
+    let values = [];
+    lruSubject.subscribe(value => values.push(value.customKey));
+
+    t.alike(values, ['2', '1']);
+});
+
+test('`key` config with nested object works correctly', async t => {
+    const onEviction = new Subject();
+    const lruSubject = new LRUReplaySubject({maxSize: 10, key: 'nested.key', onEviction});
+
+    lruSubject.next({nested: {key: '1'}, value: 'test1'});
+    lruSubject.next({nested: {key: '2'}, value: 'test2'});
+
+    let values = [];
+    lruSubject.subscribe(value => values.push(value.nested.key));
+
+    t.alike(values, ['2', '1']);
+});
+
+test('`map` config with complex function', async t => {
+    const onEviction = new Subject();
+    const mapFunc = obj => `${obj.prefix}-${obj.id}`;
+    const lruSubject = new LRUReplaySubject({maxSize: 10, map: mapFunc, onEviction});
+
+    lruSubject.next({prefix: 'item', id: '1', value: 'test1'});
+    lruSubject.next({prefix: 'item', id: '2', value: 'test2'});
+
+    let values = [];
+    lruSubject.subscribe(value => values.push(`${value.prefix}-${value.id}`));
+
+    t.alike(values, ['item-2', 'item-1']);
+});
+

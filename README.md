@@ -119,22 +119,35 @@ onEvictionSubject.subscribe(value => {
     console.log('Evicted:', value);
 });
 
-const lruSubject = new LRUReplaySubject({ maxSize: 1, maxAge: 100, onEviction: onEvictionSubject });
-lruSubject.next('test');
+const lruSubject = new LRUReplaySubject({
+    maxSize: 5,
+    maxAge: 1000 // 1 second
+});
 
-(async () => {
-    await delay(200); // Wait for 200ms
-    lruSubject.subscribe(value => console.log('Received:', value)); // Receives no items since 'test' is expired and evicted
+// Add an item and delay to see the effect of maxAge
+lruSubject.next({ id: 1, value: 'test1' });
 
-    // Output: "Evicted: test"
-    // Output: "Received: " (There are no items to receive)
-})();
+delay(1500).then(() => {
+    lruSubject.next({ id: 2, value: 'test2' });
+
+    // Subscribe to the subject to receive cached values
+    lruSubject.subscribe(value => {
+        console.log('Received:', value);
+    });
+
+    // Output: "Evicted: { id: 1, value: 'test1' }"
+    // Output: "Received: { id: 2, value: 'test2' }" (Only item 2 is in the cache)
+});
 ```
 
-### Conclusion
+## API Documentation
 
-The `LRUReplaySubject` provides a robust mechanism for managing real-time data streams with constraints on memory and time. The provided test cases ensure its reliable behavior across various scenarios, showing a combination of LRU caching with replay capabilities, including handling eviction notifications separately from cached content.
+Detailed API documentation can be found in [API.md](./API.md).
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+
+## Homepage
+
+For more information, visit the [homepage](https://github.com/zacharygriffee/lrureplaysubject#readme).

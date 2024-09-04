@@ -2,6 +2,26 @@ import {Subject, Observable, defer} from 'rxjs';
 import QuickLRU from "quick-lru";
 import delegates from "delegates";
 
+
+function tryExtractKey(key) {
+    return object => {
+        if (!key) return object;
+        if (typeof key === 'string') {
+            key = key.split('.');
+        }
+
+        for (let i = 0; i < key.length; i++) {
+            if (object && key[i] in object) {
+                object = object[key[i]];
+            } else {
+                return undefined;
+            }
+        }
+
+        return object;
+    }
+}
+
 export class LRUReplaySubject extends Subject {
     constructor(config = {}) {
         super();
@@ -9,9 +29,12 @@ export class LRUReplaySubject extends Subject {
         const {
             maxSize = Number.POSITIVE_INFINITY,
             maxAge = Number.POSITIVE_INFINITY,
-            onEviction = new Subject()
+            onEviction = new Subject(),
+            key,
+            map
         } = config;
 
+        this._mapper = map || tryExtractKey(key);
         this._cache = new QuickLRU({
             maxSize,
             maxAge,
@@ -38,14 +61,14 @@ export class LRUReplaySubject extends Subject {
             console.error('Cannot add undefined or null value to LRU cache');
             return;
         }
-        this._cache.set(value, value);
+        this._cache.set(this._mapper(value), value);
         super.next(value);
     }
 
     subscribe(subscriber) {
         if (typeof subscriber === 'function' || (subscriber && typeof subscriber.next === 'function')) {
             // Replay values from the cache in descending order
-            for (const [value] of this._cache.entriesDescending()) {
+            for (const [,value] of this._cache.entriesDescending()) {
                 (typeof subscriber === 'function' ? subscriber : subscriber.next).call(subscriber, value);
             }
         } else {

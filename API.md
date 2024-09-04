@@ -1,122 +1,71 @@
 # API Documentation
 
-## Classes
+## `tryExtractKey(key)`
 
-### LRUReplaySubject
+**Description**:
+Helper function to extract a value from an object based on a specified key which can be a string or an array of strings.
 
-A specialized RxJS `Subject` with LRU caching capabilities.
+**Parameters**:
+- `key` (string | string[]): The key or path to extract the value from the object.
 
-#### Constructor
+**Returns**:
+- A function that accepts an object and returns the extracted value.
 
-```typescript
-constructor(config?: LRUReplaySubjectConfig)
-```
+---
 
-**Parameters:**
+## `class LRUReplaySubject`
 
-- `config`: Optional configuration object
+**Description**:
+An extension of the RxJS `Subject` class with additional LRU (Least Recently Used) caching functionality using `quick-lru`.
 
-  - `maxSize` (number): Maximum size of the cache. Default is `Number.POSITIVE_INFINITY`.
-  - `maxAge` (number): Maximum age of the cache items in milliseconds. Default is `Number.POSITIVE_INFINITY`.
-  - `onEviction` (Subject): Subject to emit evicted items.
+**Constructor Parameters**:
+- `config` (object):
+  - `maxSize` (number): The maximum size of the cache. Default is `Number.POSITIVE_INFINITY`.
+  - `maxAge` (number): The maximum age of items in the cache in milliseconds. Default is `Number.POSITIVE_INFINITY`.
+  - `onEviction` (Subject): A subject that emits values when they are evicted from the cache.
+  - `key` (string | string[]): A key or path to be used to extract the key from the items.
+  - `map` (function): A custom map function to extract the key from the items. Takes precedence over the `key` configuration if both are provided.
 
-#### Example
+**Methods**:
+- `next(value)`:
+  - Adds a new value to the subject and the cache. Logs an error if the value is `null` or `undefined`.
+  - `value` (any): The value to be added.
 
-```javascript
-const lruReplaySubject = new LRUReplaySubject({
-    maxSize: 100,
-    maxAge: 60 * 60 * 1000, // 1 hour
-    onEviction: new Subject()
-});
-```
+- `subscribe(subscriber)`:
+  - Subscribes to the subject and replays the cached values in descending order.
+  - `subscriber` (function | object): A function or an object with a `next` method.
 
-#### Methods
+**Inherited Methods from QuickLRU via Delegates**:
+- `size` (getter): Returns the current size of the cache.
+- `resize(newSize)`: Resizes the cache to the specified new size.
+  - `newSize` (number): The new size of the cache.
+- `delete(key)`: Deletes an item from the cache.
+  - `key` (any): The key of the item to delete.
+- `clear()`: Clears all items from the cache.
+- `entries()`: Returns an iterator of the cache entries.
+- `values()`: Returns an iterator of the cache values.
+- `entriesAscending()`: Returns an iterator of the cache entries in ascending order.
+- `entriesDescending()`: Returns an iterator of the cache entries in descending order.
 
-##### next(value: any)
+**Events**:
+- `onEviction`: Emits values that are evicted from the cache.
 
-Adds a value to the subject and the LRU cache. Emits the value to all subscribers.
+---
 
-**Parameters:**
+## `shareLRUReplay(config)`
 
-- `value`: The value to be added.
+**Description**:
+A higher-order function that returns an Observable which shares a single subscription to the source Observable using `LRUReplaySubject`.
 
-**Example:**
+**Parameters**:
+- `config` (object):
+  - `maxSize` (number): The maximum size of the cache for the LRUReplaySubject. Default is `Number.POSITIVE_INFINITY`.
+  - `maxAge` (number): The maximum age of items in the cache in milliseconds for the LRUReplaySubject. Default is `Number.POSITIVE_INFINITY`.
+  - `onEviction` (Subject): A subject that emits values when they are evicted from the cache for the LRUReplaySubject.
+  - `key` (string | string[]): A key or path to be used to extract the key from the items for the LRUReplaySubject.
+  - `map` (function): A custom map function to extract the key from the items for the LRUReplaySubject. Takes precedence over the `key` configuration if both are provided.
 
-```javascript
-lruReplaySubject.next('newValue');
-```
+**Returns**:
+- A function that takes a source Observable and returns a new Observable which replays and shares the values from the source using `LRUReplaySubject`.
 
-##### subscribe(subscriber: function | object)
-
-Subscribes to the subject and replays cached values in descending order of recent usage.
-
-**Parameters:**
-
-- `subscriber`: A function or an object with a `next` method.
-
-**Example:**
-
-```javascript
-lruReplaySubject.subscribe(value => {
-    console.log('Received:', value);
-});
-```
-
-## Functions
-
-### shareLRUReplay
-
-Creates a shared observable using `LRUReplaySubject`.
-
-#### Signature
-
-```typescript
-shareLRUReplay(config?: LRUReplaySubjectConfig): (source: Observable) => Observable
-```
-
-**Parameters:**
-
-- `config`: Optional configuration for `LRUReplaySubject`
-
-  - `maxSize` (number): Maximum size of the cache.
-  - `maxAge` (number): Maximum age of the cache items in milliseconds.
-
-**Returns:**
-
-- A function that takes a source observable and returns a shared observable.
-
-#### Example
-
-```javascript
-import { of } from 'rxjs';
-import { shareLRUReplay } from './path-to-lru-replay-subject';
-
-// Create a source observable
-const sourceObservable = of('data1', 'data2', 'data3');
-
-// Use the shareLRUReplay operator in the observable pipeline
-const sharedObservable = sourceObservable.pipe(
-    shareLRUReplay({
-        maxSize: 5,
-        maxAge: 1000 * 30 // 30 seconds
-    })
-);
-
-const subscription = sharedObservable.subscribe({
-    next: value => console.log('Received:', value),
-    error: err => console.error('Error:', err),
-    complete: () => console.log('Completed')
-});
-```
-
-## Configuration Objects
-
-### LRUReplaySubjectConfig
-
-The configuration object for `LRUReplaySubject`.
-
-**Properties:**
-
-- `maxSize` (number): Maximum size of the cache.
-- `maxAge` (number): Maximum age of the cache items in milliseconds.
-- `onEviction` (Subject): Subject to emit evicted items.
+---

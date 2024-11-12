@@ -113,18 +113,22 @@ export class LRUReplaySubject extends Subject {
      * @returns {Subscription} A subscription object that can be used to unsubscribe.
      */
     subscribe(subscriber) {
-        if (typeof subscriber === 'function' || (subscriber && typeof subscriber.next === 'function')) {
-            // Replay values from the cache in descending order
-            for (const [,value] of this._cache.entriesDescending()) {
-                (typeof subscriber === 'function' ? subscriber : subscriber.next).call(subscriber, value);
+        // Allow for an empty object or an object with next, complete, or error methods
+        if (typeof subscriber === 'function' || (subscriber && typeof subscriber === 'object')) {
+            // Replay values from the cache only if there is a `next` handler
+            if (typeof subscriber === 'function' || (subscriber && typeof subscriber.next === 'function')) {
+                for (const [, value] of this._cache.entriesDescending()) {
+                    (typeof subscriber === 'function' ? subscriber : subscriber.next).call(subscriber, value);
+                }
             }
         } else {
-            throw new TypeError('Invalid subscriber: Expected a function or an object with a `next` method');
+            throw new TypeError('Invalid subscriber: Expected a function or an object');
         }
 
         // Proceed with the standard subscription process
         return super.subscribe(subscriber);
     }
+
 }
 
 
